@@ -1,0 +1,113 @@
+blueprint:
+  name: IKEA Switch/Dimmer to Lights via Zigbee2MQTT
+  description: Control lights using IKEA switches/dimmers connected via Zigbee2MQTT. Supports on/off toggle and brightness control.
+  domain: automation
+  input:
+    source_switch:
+      name: IKEA Switch
+      description: The Switch/Dimmer which triggers this automation.
+      selector:
+        device:
+          entity:
+            integration: mqtt
+          filter:
+            manufacturer: IKEA
+    target_light:
+      name: Target Light
+      description: The light you want to control.
+      selector:
+        target:
+alias: IKEA Switch/Dimmer to Light via Z2MQTT
+description: ""
+trigger:
+  - domain: mqtt
+    trigger: device
+    device_id: !input source_switch
+    type: action
+    subtype: "on"
+    id: "on"
+  - domain: mqtt
+    trigger: device
+    device_id: !input source_switch
+    type: action
+    subtype: "off"
+    id: "off"
+  - domain: mqtt
+    trigger: device
+    device_id: !input source_switch
+    type: action
+    subtype: "brightness_move_up"
+    id: "brightness_move_up"
+  - domain: mqtt
+    trigger: device
+    device_id: !input source_switch
+    type: action
+    subtype: "brightness_move_down"
+    id: "brightness_move_down"
+  - domain: mqtt
+    trigger: device
+    device_id: !input source_switch
+    type: action
+    subtype: "brightness_stop"
+    id: "brightness_stop"
+condition: []
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id:
+              - "on"
+        sequence:
+          - service: light.toggle
+            data: {}
+            target: !input target_light
+      - conditions:
+          - condition: trigger
+            id:
+              - "off"
+        sequence:
+          - service: light.toggle
+            data: {}
+            target: !input target_light
+      - conditions:
+          - condition: trigger
+            id:
+              - brightness_move_up
+        sequence:
+          - repeat:
+              sequence:
+                - service: light.turn_on
+                  data:
+                    brightness_step_pct: 5
+                    transition: 0.2
+                  target: !input target_light
+                - delay:
+                    hours: 0
+                    minutes: 0
+                    seconds: 0
+                    milliseconds: 200
+              count: 50
+      - conditions:
+          - condition: trigger
+            id:
+              - brightness_move_down
+        sequence:
+          - repeat:
+              sequence:
+                - service: light.turn_on
+                  data:
+                    transition: 0.2
+                    brightness_step_pct: -5
+                  target: !input target_light
+                - delay:
+                    hours: 0
+                    minutes: 0
+                    seconds: 0
+                    milliseconds: 200
+              count: 50
+      - conditions:
+          - condition: trigger
+            id:
+              - brightness_stop
+        sequence: []
+mode: restart
