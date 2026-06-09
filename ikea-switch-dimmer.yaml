@@ -80,38 +80,44 @@ action:
               - brightness_move_up
         sequence:
           - repeat:
+              count: 50
               sequence:
-                - service: light.turn_on
-                  data:
-                    brightness_step_pct: 5
-                    transition: 0.2
-                  target:
-                    entity_id: !input target_light
+                - repeat:
+                    for_each: !input target_light
+                    sequence:
+                      - service: light.turn_on
+                        data:
+                          brightness_step_pct: 5
+                          transition: 0.2
+                        target:
+                          entity_id: "{{ repeat.item }}"
                 - delay:
                     hours: 0
                     minutes: 0
                     seconds: 0
                     milliseconds: 200
-              count: 50
       - conditions:
           - condition: trigger
             id:
               - brightness_move_down
         sequence:
           - repeat:
+              count: 50
               sequence:
-                - service: light.turn_on
-                  data:
-                    transition: 0.2
-                    brightness_step_pct: -5
-                  target:
-                    entity_id: !input target_light
+                - repeat:
+                    for_each: !input target_light
+                    sequence:
+                      - service: light.turn_on
+                        data:
+                          transition: 0.2
+                          brightness_step_pct: -5
+                        target:
+                          entity_id: "{{ repeat.item }}"
                 - delay:
                     hours: 0
                     minutes: 0
                     seconds: 0
                     milliseconds: 200
-              count: 50
       - conditions:
           - condition: trigger
             id:
